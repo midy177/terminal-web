@@ -8,7 +8,7 @@
 </template>
 
 <script lang="ts" setup name="monaco">
-import { ref, watch, toRefs, reactive, onMounted, onBeforeUnmount } from 'vue';
+import {ref, watch, toRefs, reactive, onMounted, onBeforeUnmount, nextTick} from 'vue';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import * as monaco from 'monaco-editor';
 import { editor, languages } from 'monaco-editor';
@@ -132,10 +132,12 @@ const state = reactive({
 })
 
 onMounted(() => {
-    state.languageMode = <string>props.language;
-    initMonacoEditorIns();
-    setEditorValue(props.modelValue);
-    registerCompletionItemProvider();
+    nextTick(() => {
+        state.languageMode = <string>props.language;
+        initMonacoEditorIns();
+        setEditorValue(props.modelValue);
+        registerCompletionItemProvider();
+    })
 });
 
 onBeforeUnmount(() => {
