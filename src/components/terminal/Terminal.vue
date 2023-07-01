@@ -31,9 +31,15 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-    closeAll();
+    if (state.socket) {
+        state.socket.close();
+        console.log('socket关闭');
+    }
+    if (state.term) {
+        state.term.dispose();
+        state.term = null;
+    }
 });
-
 
 function initXterm() {
     const term: any = new Terminal({
@@ -54,75 +60,44 @@ function initXterm() {
     fitAddon.fit();
     term.focus();
     state.term = term;
-
-    // / **
-    //     *添加事件监听器，用于按下键时的事件。事件值包含
-    //     *将在data事件以及DOM事件中发送的字符串
-    //     *触发了它。
-    //     * @返回一个IDisposable停止监听。
-    //  * /
-    //   / ** 更新：xterm 4.x（新增）
-    //  *为数据事件触发时添加事件侦听器。发生这种情况
-    //  *用户输入或粘贴到终端时的示例。事件值
-    //  *是`string`结果的结果，在典型的设置中，应该通过
-    //  *到支持pty。
-    //  * @返回一个IDisposable停止监听。
-    //  * /
-    // 支持输入与粘贴方法
     term.onData((key: any) => {
       send(key);
     });
+    term.onResize(size => {
+        onResize(size)
+    })
 }
 
-let pingInterval: any;
 function initSocket() {
-      state.socket = new WebSocket(props.url || '');
-
+    state.socket = new WebSocket(props.url || '');
     // 监听socket连接
     state.socket.onopen = () => {
-        // 如果有初始要执行的命令，则发送执行命令
-        // if (state.cmd) {
-        //     sendCmd(state.cmd + ' \r');
-        // }
-        // 开启心跳
-        // pingInterval = setInterval(() => {
-        //     send({ type: ping, msg: 'ping' });
-        // }, 8000);
       addTerminalResize();
     };
-
     // 监听socket错误信息
     state.socket.onerror = (e: any) => {
         console.log('连接错误', e);
     };
-
     state.socket.onclose = () => {
         if (state.term) {
             state.term.writeln('\r\n\x1b[31m提示: 连接已关闭...');
         }
-        if (pingInterval) {
-            clearInterval(pingInterval);
-        }
       removeResizeListener();
     };
-
     // 发送socket消息
     state.socket.onsend = send;
-
     // 监听socket消息
     state.socket.onmessage = getMessage;
 }
 
 function getMessage(msg: any) {
-    // msg.data是真正后端返回的数据
   const data = msg.data;
   if (data instanceof Blob) {
     const reader = new FileReader();
     reader.onload = function(event: ProgressEvent<FileReader>) {
-      // 读取完成后的处理逻辑
       if (event.target && event.target.result) {
         const result: string = event.target.result as string;
-        state.term.write(result); // 输出输入内容
+        state.term.write(result);
       }
     };
     reader.readAsText(data);
@@ -133,52 +108,29 @@ function send(msg: any) {
     state.socket.send(new TextEncoder().encode(msg));
 }
 
-function sendCmd(key: any) {
-    send({
-        type: data,
-        msg: key,
-    });
-}
-
-function close() {
-    if (state.socket) {
-        state.socket.close();
-        console.log('socket关闭');
-    }
-}
-
-function closeAll() {
-    close();
-    if (state.term) {
-        state.term.dispose();
-        state.term = null;
-    }
-}
-function onResize() {
-  // 监听窗口resize
-  window.addEventListener('resize', () => {
+function onResize(size: any) {
     try {
-      // 窗口大小改变时，触发xterm的resize方法使自适应
-      fitAddon.fit();
       if (state.term) {
         state.term.focus();
         if (state.socket) {
-          state.socket.send(JSON.stringify({
-            rows: parseInt(state.term.cols),
-            cows: parseInt(state.term.rows),
-          }));
+          state.socket.send(JSON.stringify(size));
         }
       }
     } catch (e) {
-      console.log(e);
+      console.error(e);
     }
-  });
 }
+function fitTerm() {
+    setTimeout(() => {
+        fitAddon.fit();
+    }, 100)
+};
 function addTerminalResize() {
-  window.addEventListener("resize", onResize);
+  window.addEventListener("resize", fitTerm);
+  onResize({cols: state.term.cols, rows: state.term.rows});
 }
 function removeResizeListener() {
-  window.removeEventListener("resize", onResize);
+  window.removeEventListener("resize", fitTerm);
 }
 </script>
 <style scoped>

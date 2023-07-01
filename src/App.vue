@@ -3,7 +3,7 @@ import Terminal from "./components/terminal/Terminal.vue";
 </script>
 
 <template>
-  <Terminal url="ws://127.0.0.1:8080/web_terminal"/>
+  <Terminal url="ws://172.31.109.4:8080/web_terminal"/>
 </template>
 
 <!--<style scoped></style>-->
