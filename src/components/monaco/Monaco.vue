@@ -1,18 +1,18 @@
 <template>
-    <div class="monaco-editor" style="border: 1px solid #ccc;">
-        <div class="monaco-editor-content" ref="monacoTextarea" :style="{ height: height }"></div>
-        <el-select v-if="canChangeMode" class="code-mode-select" v-model="languageMode" @change="changeLanguage">
-            <el-option v-for="mode in languageArr" :key="mode.value" :label="mode.label" :value="mode.value"> </el-option>
-        </el-select>
+    <div class="monaco-editor" :style="{ height: height }">
+        <div class="monaco-editor-content" ref="monacoTextarea" :style="{ height: height }"/>
+        <select v-if="canChangeMode" class="code-mode-select" v-model="state.languageMode" @change="changeLanguage">
+            <option v-for="mode in languageArr" :key="mode.value" :label="mode.label" :value="mode.value"> </option>
+        </select>
     </div>
 </template>
 
-<script lang="ts" setup>
+<script lang="ts" setup name="monaco">
 import { ref, watch, toRefs, reactive, onMounted, onBeforeUnmount } from 'vue';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import * as monaco from 'monaco-editor';
 import { editor, languages } from 'monaco-editor';
-import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
+import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker.js?worker';
 // 主题仓库 https://github.com/brijeshb42/monaco-themes
 // 主题例子 https://editor.bitwiser.in/
 // import Monokai from 'monaco-themes/themes/Monokai.json'
@@ -21,9 +21,9 @@ import JsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
 // import bop from 'monaco-themes/themes/Birds of Paradise.json'
 // import krTheme from 'monaco-themes/themes/krTheme.json'
 // import Dracula from 'monaco-themes/themes/Dracula.json'
-import SolarizedLight from 'monaco-themes/themes/Solarized-light.json'
+import SolarizedLight from 'monaco-themes/themes/Solarized-light.json';
 import { language as shellLan } from 'monaco-editor/esm/vs/basic-languages/shell/shell.js';
-import { ElOption, ElSelect } from 'element-plus';
+import { Select } from 'ant-design-vue'
 
 const props = defineProps({
     modelValue: {
@@ -31,15 +31,15 @@ const props = defineProps({
     },
     language: {
         type: String,
-        default: null,
+        default: 'shell',
     },
     height: {
         type: String,
-        default: '500px',
+        default: '100%',
     },
     width: {
         type: String,
-        default: 'auto',
+        default: '100%',
     },
     canChangeMode: {
         type: Boolean,
@@ -131,10 +131,6 @@ const state = reactive({
     languageMode: 'shell',
 })
 
-const {
-    languageMode,
-} = toRefs(state)
-
 onMounted(() => {
     state.languageMode = <string>props.language;
     initMonacoEditorIns();
@@ -153,7 +149,7 @@ onBeforeUnmount(() => {
 
 watch(() => props.modelValue, (newValue: any) => {
     if (!monacoEditorIns.hasTextFocus()) {
-        state.languageMode = props.language;
+        state.languageMode = <string>props.language;
         monacoEditorIns?.setValue(newValue);
     }
 })
@@ -169,13 +165,14 @@ let monacoEditorIns: editor.IStandaloneCodeEditor = null as any;
 let completionItemProvider: any = null;
 
 self.MonacoEnvironment = {
-    getWorker(_: any, label: string) {
+    getWorker(workerId: string, label: string) {
         if (label === 'json') {
             return new JsonWorker()
+        } else {
+            return new EditorWorker()
         }
-        return new EditorWorker();
     }
-};
+}
 
 const initMonacoEditorIns = () => {
     console.log('初始化monaco编辑器')
@@ -184,7 +181,7 @@ const initMonacoEditorIns = () => {
     monaco.editor.defineTheme('SolarizedLight', SolarizedLight);
     options.language = state.languageMode;
     // 从localStorage中获取，通过store可能存在父子组件都使用store报错
-    options.theme = JSON.parse(localStorage.getItem('themeConfig') as string).editorTheme || 'vs';
+    options.theme = JSON.parse(localStorage.getItem('themeConfig') as string)?.editorTheme || 'vs-dark';
     monacoEditorIns = monaco.editor.create(monacoTextarea.value, Object.assign(options, props.options as any));
 
     // 监听内容改变,双向绑定
@@ -267,7 +264,7 @@ defineExpose({ format })
 
 </script>
 
-<style lang="scss">
+<style scoped>
 .monaco-editor {
     .code-mode-select {
         position: absolute;

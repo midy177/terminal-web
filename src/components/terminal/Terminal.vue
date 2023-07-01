@@ -1,15 +1,18 @@
 <template>
-    <div id="xterm" class="xterm" />
+    <div id="xterm" class="xterm"/>
 </template>
 
 <script lang="ts" setup name="terminal">
 import 'xterm/css/xterm.css';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
-import { nextTick, reactive, onMounted, onBeforeUnmount } from 'vue';
+import {nextTick, reactive, onMounted, onBeforeUnmount} from 'vue';
+
 
 const props = defineProps({
-    url: { type: String },
+    url: {
+        type: String
+    },
 })
 
 const state = reactive({
@@ -19,11 +22,7 @@ const state = reactive({
 
 const fitAddon = new FitAddon();
 
-const resize = 1;
-const data = 2;
-
 onMounted(() => {
-
     nextTick(() => {
         initXterm();
         initSocket();
@@ -60,8 +59,11 @@ function initXterm() {
     fitAddon.fit();
     term.focus();
     state.term = term;
-    term.onData((key: any) => {
-      send(key);
+    term.onData((data: any) => {
+        sendToSocket(data);
+    });
+    term.onBinary((data: any) => {
+        sendToSocket(data);
     });
     term.onResize(size => {
         onResize(size)
@@ -85,7 +87,7 @@ function initSocket() {
       removeResizeListener();
     };
     // 发送socket消息
-    state.socket.onsend = send;
+    state.socket.onsend = sendToSocket;
     // 监听socket消息
     state.socket.onmessage = getMessage;
 }
@@ -104,7 +106,8 @@ function getMessage(msg: any) {
   }
 }
 
-function send(msg: any) {
+
+function sendToSocket(msg: any) {
     state.socket.send(new TextEncoder().encode(msg));
 }
 
@@ -124,7 +127,8 @@ function fitTerm() {
     setTimeout(() => {
         fitAddon.fit();
     }, 100)
-};
+}
+
 function addTerminalResize() {
   window.addEventListener("resize", fitTerm);
   onResize({cols: state.term.cols, rows: state.term.rows});
@@ -132,6 +136,7 @@ function addTerminalResize() {
 function removeResizeListener() {
   window.removeEventListener("resize", fitTerm);
 }
+
 </script>
 <style scoped>
 .xterm {
