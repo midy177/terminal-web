@@ -96,9 +96,9 @@ function initSocket() {
       removeResizeListener();
     };
     // 发送socket消息
-    state.socket.onsend = sendToSocket;
+    // state.socket.onsend = sendToSocket;
     // 监听socket消息
-    state.socket.onmessage = getMessage;
+    state.socket.onmessage = getMessageFromWebsocket;
 }
 
 function initTrzszFilter(){
@@ -108,7 +108,7 @@ function initTrzszFilter(){
   });
 }
 
-function getMessage(msg: any) {
+function getMessageFromWebsocket(msg: any) {
   const data = msg.data;
   if (data instanceof Blob) {
     const reader = new FileReader();
