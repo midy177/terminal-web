@@ -1,31 +1,40 @@
 <template>
-    <div id="xterm" class="xterm"/>
+    <div id="xterm" class="xterm" @dragover="handlerDragover" @drop="handlerDrop"/>
 </template>
 
 <script lang="ts" setup name="terminal">
 import 'xterm/css/xterm.css';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
+import { TrzszFilter } from 'trzsz';
 import {nextTick, reactive, onMounted, onBeforeUnmount} from 'vue';
 
 
 const props = defineProps({
-    url: {
-        type: String
+  url: {
+    type: String,
+    required: true
     },
+  withTrzsz: {
+    type: Boolean,
+    default: false,
+    required: true
+  }
 })
 
 const state = reactive({
-    term: null as any,
-    socket: null as any,
+  term: null as any,
+  socket: null as any,
+  trzszFilter: null as any,
 });
 
 const fitAddon = new FitAddon();
 
 onMounted(() => {
     nextTick(() => {
-        initXterm();
-        initSocket();
+      if (props.withTrzsz) initTrzszFilter();
+      initXterm();
+      initSocket();
     });
 });
 
@@ -60,10 +69,10 @@ function initXterm() {
     term.focus();
     state.term = term;
     term.onData((data: any) => {
-        sendToSocket(data);
+      props.withTrzsz && state.trzszFilter ? state.trzszFilter.processTerminalInput(data) : sendToSocket(data);
     });
     term.onBinary((data: any) => {
-        sendToSocket(data);
+      props.withTrzsz && state.trzszFilter ? state.trzszFilter.processBinaryInput(data) : sendToSocket(data);
     });
     term.onResize(size => {
         onResize(size)
@@ -92,6 +101,13 @@ function initSocket() {
     state.socket.onmessage = getMessage;
 }
 
+function initTrzszFilter(){
+  state.trzszFilter = new TrzszFilter({
+    writeToTerminal: (data) => writeToTerminal(data),
+    sendToServer: (data) => sendToSocket(data),
+  });
+}
+
 function getMessage(msg: any) {
   const data = msg.data;
   if (data instanceof Blob) {
@@ -99,25 +115,29 @@ function getMessage(msg: any) {
     reader.onload = function(event: ProgressEvent<FileReader>) {
       if (event.target && event.target.result) {
         const result: string = event.target.result as string;
-        state.term.write(result);
+        props.withTrzsz && state.trzszFilter? state.trzszFilter.processServerOutput(result) : state.term.write(result);
       }
     };
     reader.readAsText(data);
   }
 }
 
-
 function sendToSocket(msg: any) {
-    state.socket.send(new TextEncoder().encode(msg));
+  // console.log('send from trzsz\n',msg)
+  state.socket.send(typeof msg === "string" ? new TextEncoder().encode(msg) : msg);
+}
+
+function writeToTerminal(msg: any) {
+  // console.log('write from trzsz\n',msg)
+  state.term.write(typeof msg === "string" ? msg : new Uint8Array(msg));
 }
 
 function onResize(size: any) {
     try {
       if (state.term) {
         state.term.focus();
-        if (state.socket) {
-          state.socket.send(JSON.stringify(size));
-        }
+        if (state.socket) state.socket.send(JSON.stringify(size));
+        if (props.withTrzsz && state.trzszFilter) state.trzszFilter.setTerminalColumns(size.cols);
       }
     } catch (e) {
       console.error(e);
@@ -135,6 +155,17 @@ function addTerminalResize() {
 }
 function removeResizeListener() {
   window.removeEventListener("resize", fitTerm);
+}
+
+function handlerDragover(event: any) {
+  event.preventDefault();
+}
+
+function handlerDrop(event: any){
+  event.preventDefault();
+  if (props.withTrzsz && state.trzszFilter) state.trzszFilter.uploadFiles(event.dataTransfer.items)
+      .then(() => console.log("upload success"))
+      .catch((err) => console.error(err));
 }
 
 </script>
