@@ -87,11 +87,13 @@ function initSocket() {
     };
     // 监听socket错误信息
     state.socket.onerror = (e: any) => {
-        console.log('连接错误', e);
+        console.error('连接错误', e);
+      writeToTerminal(`\r\n\r\n\x1b[31m============== Error: ${JSON.stringify(e)} ============\x1b[0m\r\n\r\n`);
     };
     state.socket.onclose = () => {
         if (state.term) {
-            state.term.writeln('\r\n\x1b[31m提示: 连接已关闭...');
+            // state.term.writeln('\r\n\x1b[31m提示: 连接已关闭...');
+          writeToTerminal(`\r\n\r\n\x1b[31m============== connect closed! ============\x1b[0m\r\n\r\n`);
         }
       removeResizeListener();
     };
@@ -141,6 +143,7 @@ function onResize(size: any) {
       }
     } catch (e) {
       console.error(e);
+      writeToTerminal(`\r\n\r\n\x1b[31m============== Error: ${JSON.stringify(e)} ============\x1b[0m\r\n\r\n`);
     }
 }
 function fitTerm() {
