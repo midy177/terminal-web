@@ -7,6 +7,8 @@ import 'xterm/css/xterm.css';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { TrzszFilter } from 'trzsz';
+import { Unicode11Addon } from 'xterm-addon-unicode11';
+import { LigaturesAddon } from 'xterm-addon-ligatures';
 import {nextTick, reactive, onMounted, onBeforeUnmount} from 'vue';
 
 
@@ -29,6 +31,8 @@ const state = reactive({
 });
 
 const fitAddon = new FitAddon();
+const unicode11Addon = new Unicode11Addon();
+const ligaturesAddon = new LigaturesAddon();
 
 onMounted(() => {
     nextTick(() => {
@@ -51,20 +55,25 @@ onBeforeUnmount(() => {
 
 function initXterm() {
     const term: any = new Terminal({
-        fontSize: 15,
-        fontWeight: 'normal',
-        fontFamily: 'JetBrainsMono, monaco, Consolas, Lucida Console, monospace',
-        cursorBlink: true,
-        disableStdin: false,
-        theme: {
-            foreground: '#ffffff', //字体
-            background: '#000000', //背景色
-            cursor: '#90f64c', //设置光标
-            cursorAccent: "red",  // 光标停止颜色
-        } as any,
+      fontSize: 15,
+      fontWeight: 'normal',
+      fontFamily: 'JetBrainsMono, monaco, Consolas, Lucida Console, monospace',
+      cursorBlink: true,
+      disableStdin: false,
+      cursorStyle: 'underline',
+      allowProposedApi: true,
+      theme: {
+        foreground: '#ffffff', //字体
+        background: '#000000', //背景色
+        cursor: '#90f64c', //设置光标
+        cursorAccent: "red",  // 光标停止颜色
+      } as any,
     });
     term.loadAddon(fitAddon);
+    term.loadAddon(unicode11Addon);
+    term.unicode.activeVersion = '11';
     term.open(document.getElementById('xterm'));
+    term.loadAddon(ligaturesAddon);
     fitAddon.fit();
     term.focus();
     state.term = term;

@@ -14,7 +14,10 @@
     "monaco-themes": "^0.4.4",
     "trzsz": "^1.1.0",
     "vue": "^3.2.47",
-    "xterm-addon-fit": "^0.7.0"
+    "xterm-addon-fit": "^0.7.0",
+    "xterm-addon-ligatures": "^0.6.0",
+    "xterm-addon-unicode11": "^0.5.0",
+    "xterm-theme": "^1.1.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^4.1.0",

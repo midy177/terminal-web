@@ -19,6 +19,9 @@ dependencies:
   xterm-addon-fit:
     specifier: ^0.7.0
     version: 0.7.0(xterm@5.2.1)
+  xterm-theme:
+    specifier: ^1.1.0
+    version: 1.1.0
 
 devDependencies:
   '@vitejs/plugin-vue':
@@ -786,6 +789,10 @@ packages:
       xterm: ^5.0.0
     dependencies:
       xterm: 5.2.1
+    dev: false
+
+  /xterm-theme@1.1.0:
+    resolution: {integrity: sha512-n2GocBEbqcz4vEl4OYkU93hEVia8GWdnqchiz/0nQ/olRUyhulGf4wfha23x/D2m0imWaIavRZtt8c6kWZXdsA==}
     dev: false
 
   /xterm@5.2.1:
