@@ -1,5 +1,11 @@
 <template>
-    <div id="xterm" class="xterm" @dragover="handlerDragover" @drop="handlerDrop"/>
+ <div class="main-xterm">
+     <div id="xterm" class="xterm" @dragover="handlerDragover" @drop="handlerDrop">
+         <select class="change-theme" v-if="canChangeTheme" v-model="state.currTheme" @change="handlerChangeTheme">
+             <option v-for="(item,i) in state.allThemes" :key="i" :label="i" :value="item"/>
+         </select>
+     </div>
+ </div>
 </template>
 
 <script lang="ts" setup name="terminal">
@@ -22,13 +28,20 @@ const props = defineProps({
     type: Boolean,
     default: false,
     required: true
+  },
+  canChangeTheme: {
+    type: Boolean,
+    default: false,
+    required: true
   }
 })
 
 const state = reactive({
-  term: null as any,
-  socket: null as any,
-  trzszFilter: null as any,
+    term: null as any,
+    socket: null as any,
+    trzszFilter: null as any,
+    allThemes: xtermTheme,
+    currTheme: Gruvbox_Dark,
 });
 
 const fitAddon = new FitAddon();
@@ -39,7 +52,6 @@ onMounted(() => {
       if (props.withTrzsz) initTrzszFilter();
       initXterm();
       initSocket();
-      // console.log(Object.keys(xtermTheme))
     });
 });
 
@@ -64,12 +76,6 @@ function initXterm() {
       cursorStyle: 'underline',
       allowProposedApi: true,
       theme: Gruvbox_Dark,
-      // theme: {
-      //   foreground: '#ffffff', //字体
-      //   background: '#000000', //背景色
-      //   cursor: '#90f64c', //设置光标
-      //   cursorAccent: "red",  // 光标停止颜色
-      // } as any,
     });
     term.open(document.getElementById('xterm'));
     term.loadAddon(fitAddon);
@@ -181,17 +187,29 @@ function handlerDrop(event: any){
       .catch((err) => console.error(err));
 }
 
-function handlerChangeTheme() {
-    if (state.term) state.term.option.theme = ''
+function handlerChangeTheme(event: any) {
+    if (state.term) state.term.options.theme = state.currTheme
 }
 </script>
 <style scoped>
+.main-xterm {
+    position: relative;
+    height: 100%;
+    width: 100%;
+}
 .xterm {
+    position: absolute;
   width: 100%;
   height: 100%;
   text-align: left;
     .xterm-viewport {
         overflow-y: hidden;
     }
+}
+.change-theme {
+    position: absolute;
+    top: 0.25rem;
+    right: 1rem;
+    z-index: 900;
 }
 </style>
