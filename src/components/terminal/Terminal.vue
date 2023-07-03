@@ -8,7 +8,8 @@ import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import { TrzszFilter } from 'trzsz';
 import { Unicode11Addon } from 'xterm-addon-unicode11';
-import { LigaturesAddon } from 'xterm-addon-ligatures';
+import { Gruvbox_Dark } from 'xterm-theme';
+import xtermTheme from 'xterm-theme';
 import {nextTick, reactive, onMounted, onBeforeUnmount} from 'vue';
 
 
@@ -32,13 +33,13 @@ const state = reactive({
 
 const fitAddon = new FitAddon();
 const unicode11Addon = new Unicode11Addon();
-const ligaturesAddon = new LigaturesAddon();
 
 onMounted(() => {
     nextTick(() => {
       if (props.withTrzsz) initTrzszFilter();
       initXterm();
       initSocket();
+      // console.log(Object.keys(xtermTheme))
     });
 });
 
@@ -62,18 +63,18 @@ function initXterm() {
       disableStdin: false,
       cursorStyle: 'underline',
       allowProposedApi: true,
-      theme: {
-        foreground: '#ffffff', //字体
-        background: '#000000', //背景色
-        cursor: '#90f64c', //设置光标
-        cursorAccent: "red",  // 光标停止颜色
-      } as any,
+      theme: Gruvbox_Dark,
+      // theme: {
+      //   foreground: '#ffffff', //字体
+      //   background: '#000000', //背景色
+      //   cursor: '#90f64c', //设置光标
+      //   cursorAccent: "red",  // 光标停止颜色
+      // } as any,
     });
+    term.open(document.getElementById('xterm'));
     term.loadAddon(fitAddon);
     term.loadAddon(unicode11Addon);
     term.unicode.activeVersion = '11';
-    term.open(document.getElementById('xterm'));
-    term.loadAddon(ligaturesAddon);
     fitAddon.fit();
     term.focus();
     state.term = term;
@@ -97,12 +98,12 @@ function initSocket() {
     // 监听socket错误信息
     state.socket.onerror = (e: any) => {
         console.error('连接错误', e);
-      writeToTerminal(`\r\n\r\n\x1b[31m============== Error: ${JSON.stringify(e)} ============\x1b[0m\r\n\r\n`);
+      writeToTerminal(`\r\n\x1b[31m============== Error: ${JSON.stringify(e)} ============\x1b[0m\r\n`);
     };
     state.socket.onclose = () => {
         if (state.term) {
             // state.term.writeln('\r\n\x1b[31m提示: 连接已关闭...');
-          writeToTerminal(`\r\n\r\n\x1b[31m============== connect closed! ============\x1b[0m\r\n\r\n`);
+          writeToTerminal(`\r\n\x1b[31m============== connect closed! ============\x1b[0m\r\n`);
         }
       removeResizeListener();
     };
@@ -180,6 +181,9 @@ function handlerDrop(event: any){
       .catch((err) => console.error(err));
 }
 
+function handlerChangeTheme() {
+    if (state.term) state.term.option.theme = ''
+}
 </script>
 <style scoped>
 .xterm {

@@ -1,14 +1,11 @@
 <template>
     <div class="monaco-editor" :style="{ height: height }">
         <div class="monaco-editor-content" ref="monacoTextarea" :style="{ height: height }"/>
-        <select v-if="canChangeMode" class="code-mode-select" v-model="state.languageMode" @change="changeLanguage">
-            <option v-for="mode in languageArr" :key="mode.value" :label="mode.label" :value="mode.value"> </option>
-        </select>
     </div>
 </template>
 
 <script lang="ts" setup name="monaco">
-import {ref, watch, toRefs, reactive, onMounted, onBeforeUnmount, nextTick} from 'vue';
+import {ref, watch, reactive, onMounted, onBeforeUnmount, nextTick} from 'vue';
 import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
 import * as monaco from 'monaco-editor';
 import { editor, languages } from 'monaco-editor';
@@ -41,10 +38,6 @@ const props = defineProps({
         type: String,
         default: '100%',
     },
-    canChangeMode: {
-        type: Boolean,
-        default: false,
-    },
     options: {
         type: Object,
         default: null,
@@ -53,57 +46,6 @@ const props = defineProps({
 
 //定义事件
 const emit = defineEmits(['update:modelValue'])
-
-const languageArr = [
-    {
-        value: 'shell',
-        label: 'Shell',
-    },
-    {
-        value: 'json',
-        label: 'JSON',
-    },
-    {
-        value: 'yaml',
-        label: 'Yaml',
-    },
-    {
-        value: 'dockerfile',
-        label: 'Dockerfile',
-    },
-    {
-        value: 'html',
-        label: 'XML/HTML',
-    },
-    {
-        value: 'python',
-        label: 'Python',
-    },
-    {
-        value: 'sql',
-        label: 'SQL',
-    },
-    {
-        value: 'css',
-        label: 'CSS',
-    },
-    {
-        value: 'javascript',
-        label: 'Javascript',
-    },
-    {
-        value: 'java',
-        label: 'Java',
-    },
-    {
-        value: 'markdown',
-        label: 'Markdown',
-    },
-    {
-        value: 'text',
-        label: 'text',
-    },
-];
 
 const options = {
     language: 'shell',
@@ -183,7 +125,7 @@ const initMonacoEditorIns = () => {
     monaco.editor.defineTheme('SolarizedLight', SolarizedLight);
     options.language = state.languageMode;
     // 从localStorage中获取，通过store可能存在父子组件都使用store报错
-    options.theme = JSON.parse(localStorage.getItem('themeConfig') as string)?.editorTheme || 'vs-dark';
+    options.theme = JSON.parse(localStorage.getItem('themeConfig') as string)?.editorTheme || 'twilight';
     monacoEditorIns = monaco.editor.create(monacoTextarea.value, Object.assign(options, props.options as any));
 
     // 监听内容改变,双向绑定

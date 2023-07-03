@@ -8,7 +8,7 @@ const state = reactive({
 </script>
 
 <template>
-  <Terminal url="ws://127.0.0.1:8080/web_terminal" :withTrzsz="true"/>
+  <Terminal url="ws://172.31.109.4:8080/web_terminal" :withTrzsz="true"/>
 <!--  <monaco v-model="state.data" :canChangeMode="true" height="100%" language="sql"/>-->
 </template>
 
